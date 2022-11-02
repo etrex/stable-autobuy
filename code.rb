@@ -11,7 +11,7 @@ Dotenv.load
 Capybara.default_max_wait_time = 1
 Capybara.default_driver = :selenium_chrome_headless
 Capybara.default_driver = :selenium_chrome
-
+Capybara.match = :first
 
 @session = Capybara.current_session
 
@@ -81,7 +81,50 @@ def checkout
   find_link("前往結帳")&.click
 end
 
-open "https://unstable-shop.fly.dev/"
-ensure_login
-ensure_product_in_cart
-checkout
+def is_purchased?
+  open "https://unstable-shop.fly.dev/orders"
+  @session.all(".px-3.py-1.font-semibold.rounded-md.bg-violet-600.text-gray-50 a").last&.click
+  @session.find(".text-lg.font-semibold.leading-snug")&.text == @product_name
+end
+
+def ensure_buy_once
+  while is_purchased? == false
+    # 若未將商品加入購物車，將商品加入購物車
+    ensure_product_in_cart
+
+    # 結帳
+    checkout
+  end
+end
+
+
+def stable_autobuy
+  # 開啟首頁
+  open "https://unstable-shop.fly.dev/"
+
+  # 若未登入，執行登入
+  ensure_login
+
+  # 若尚未完成購買，執行購買
+  ensure_buy_once
+end
+
+def autobuy
+  # 開啟首頁
+  open "https://unstable-shop.fly.dev/"
+
+  # 執行登入
+  login
+
+  # 將商品加入購物車
+  add_product_to_cart
+
+  # 結帳
+  checkout
+end
+
+stable_autobuy
+
+byebug
+
+a = 1
